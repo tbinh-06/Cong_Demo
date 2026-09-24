@@ -262,7 +262,7 @@ input[type=range]{width:100%;accent-color:var(--olive2)}
         <div class="grid g2">
           <div class="card">
             <h3>Cặp món mua kèm <span class="badge sim">giả lập</span></h3>
-            <div class="hint">Kích thước điểm theo confidence — xác suất mua món B khi đã mua món A.</div>
+            <div class="hint">Mỗi điểm là một quy luật kết hợp. Trục ngang support, trục dọc confidence, màu thể hiện lift.</div>
             <div id="c_net" class="chart" style="height:450px"></div>
           </div>
           <div class="card">
@@ -759,23 +759,25 @@ const MBA=[
  ["Xoài leo mãng cầu","Hạt điều rang",0.021,0.14,1.44]
 ];
 function renderP4(){
-  const pts=MBA.map(r=>({value:[+(r[2]*100).toFixed(1),r[4],r[3]],name:r[0]+" + "+r[1],
-    sup:r[2],conf:r[3],lift:r[4],label:{position:r[2]>0.12?"left":"right"}}));
+  const pts=MBA.map(r=>({value:[+(r[2]*100).toFixed(1),+(r[3]*100).toFixed(1),r[4]],
+    name:r[0]+" + "+r[1],sup:r[2],conf:r[3],lift:r[4],
+    label:{position:r[2]>0.12?"left":"right"}}));
+  const lifts=MBA.map(r=>r[4]);
   ch("c_net").setOption({...BASEOPT,
-    grid:{left:10,right:24,top:26,bottom:10,containLabel:true},
+    grid:{left:34,right:24,top:22,bottom:52,containLabel:true},
     tooltip:{...BASEOPT.tooltip,formatter:p=>`<b>${p.data.name}</b><br>Support ${pct(p.data.sup)}<br>Confidence ${pct(p.data.conf,0)}<br>Lift ${p.data.lift.toFixed(2).replace('.',',')}`},
+    visualMap:{type:"continuous",min:Math.floor(Math.min(...lifts)*10)/10,max:Math.ceil(Math.max(...lifts)*10)/10,
+      dimension:2,calculable:true,orient:"horizontal",left:"center",bottom:0,itemWidth:12,itemHeight:120,
+      text:["Lift cao","Lift thấp"],textStyle:{color:"#5C5A4E",fontSize:11},
+      inRange:{color:["#9AA486","#C08A2E","#A3352B"]}},
     xAxis:{type:"value",name:"Support — % hoá đơn chứa cả hai món",nameLocation:"middle",nameGap:28,...AXIS,
       axisLabel:{...AXIS.axisLabel,formatter:v=>v+"%"}},
-    yAxis:{type:"value",name:"Lift",nameLocation:"middle",nameGap:36,min:0.9,...AXIS},
-    series:[{type:"scatter",data:pts,
-      symbolSize:d=>16+d[2]*46,
-      itemStyle:{color:"#5C6B47",opacity:.82,borderColor:"#F7F3E7",borderWidth:1},
-      label:{show:true,position:"right",fontSize:10.5,color:"#26251F",
-        formatter:p=>p.data.name,distance:6},
-      labelLayout:{hideOverlap:true},
-      markLine:{silent:true,symbol:"none",lineStyle:{color:"#A3352B",type:"dashed",width:1.2},
-        label:{formatter:"Lift = 1",color:"#A3352B",fontSize:10.5,position:"insideEndTop"},
-        data:[{yAxis:1}]}}]},true);
+    yAxis:{type:"value",name:"Confidence",nameLocation:"middle",nameGap:40,...AXIS,
+      axisLabel:{...AXIS.axisLabel,formatter:v=>v+"%"}},
+    series:[{type:"scatter",data:pts,symbolSize:17,
+      itemStyle:{opacity:.9,borderColor:"#F7F3E7",borderWidth:1},
+      label:{show:true,fontSize:10.5,color:"#26251F",formatter:p=>p.data.name,distance:6},
+      labelLayout:{hideOverlap:true}}]},true);
 
   t_mba.innerHTML=`<thead><tr><th>Món A</th><th>Món B</th><th>Support</th><th>Confidence</th><th>Lift</th></tr></thead><tbody>`+
     [...MBA].sort((a,b)=>b[4]-a[4]).map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td>
