@@ -183,8 +183,10 @@ input[type=range]{width:100%;accent-color:var(--olive2)}
       <div class="f"><label for="fMien">Miền</label><select id="fMien"></select></div>
       <div class="f"><label for="fKV">Khu vực</label><select id="fKV"></select></div>
       <div class="f"><label for="fCDT">Nhóm chủ đầu tư</label><select id="fCDT"></select></div>
-      <div class="f"><label for="fNhom">Phân nhóm sản phẩm</label><select id="fNhom"></select></div>
       <div class="f"><label for="fKH">Nhóm khách hàng</label><select id="fKH"></select></div>
+      <div class="f"><label for="fLoai">Loại sản phẩm</label><select id="fLoai"></select></div>
+      <div class="f"><label for="fNhom">Nhóm sản phẩm</label><select id="fNhom"></select></div>
+      <div class="f"><label for="fDong">Dòng sản phẩm</label><select id="fDong"></select></div>
       <button class="btn ghost" id="fReset">Xoá bộ lọc</button>
     </div>
 
@@ -195,7 +197,7 @@ input[type=range]{width:100%;accent-color:var(--olive2)}
         <div class="kpis" id="kpis"></div>
 
         <div class="sechead">
-          <div><h2>Cấu trúc menu theo phân nhóm sản phẩm</h2>
+          <div><h2>Cấu trúc menu theo nhóm sản phẩm</h2>
           <p>Nhóm nào đang gánh sản lượng, nhóm nào đang gánh biên lợi nhuận.</p></div>
         </div>
         <div class="grid g2">
@@ -231,7 +233,7 @@ input[type=range]{width:100%;accent-color:var(--olive2)}
         <div class="grid g2">
           <div class="card">
             <h3>Ma trận 4 góc <span class="badge sim">trục X giả lập</span></h3>
-            <div class="hint">Rê chuột lên một điểm để xem số bán, GM và giá niêm yết bình quân.</div>
+            <div class="hint">Trung vị được tính lại trên đúng phạm vi đang lọc. Nên chọn một loại sản phẩm trước khi đọc ma trận, vì đồ uống pha chế và hàng quà tặng có nền biên lợi nhuận khác hẳn nhau.</div>
             <div id="c_matrix" class="chart" style="height:430px"></div>
             <div class="legend" id="quadLegend"></div>
           </div>
@@ -354,48 +356,75 @@ input[type=range]{width:100%;accent-color:var(--olive2)}
    - DEMO: sinh bằng PRNG seed cố định, chỉ để minh hoạ cấu trúc báo cáo
    ========================================================= */
 const REAL = [
- {mon:"Sữa chua tuyết mãng cầu", size:"16oz", gia:69000, cost:16196.56805, hao:17816.22486, gv:0.2347328703,
+ {ma:"HE26MC16SC", mon:"Sữa chua tuyết mãng cầu", size:"16oz", gia:69000, cost:16196.56805, hao:17816.22486, gv:0.2347328703,
   nvl:[["Sữa chua",1,"hộp",48,313200,6525],["Siro đường",20,"ml",1100,28000,509.0909091],
       ["Mứt mãng cầu (60gr)",50,"ml",1000,132000,6600],["Thạch atiso",50,"gr",390,17763.38571,2277.357143],
       ["Đá bi",220,"gr",5000,6480,285.12]]},
- {mon:"Vina-cano mãng cầu", size:"16oz", gia:69000, cost:13467.99139, hao:14814.79052, gv:0.1951882809,
+ {ma:"HE26MC16VC", mon:"Vina-cano mãng cầu", size:"16oz", gia:69000, cost:13467.99139, hao:14814.79052, gv:0.1951882809,
   nvl:[["Cốt cà phê",20,"ml",2400,290950,2424.583333],["Siro đường",20,"ml",1100,28000,509.0909091],
       ["Mứt mãng cầu (70gr)",60,"ml",1000,132000,7920],["Thạch atiso",50,"gr",390,17763.38571,2277.357143],
       ["Đá bào",260,"gr",5000,6480,336.96]]},
- {mon:"Shan nhài mãng cầu", size:"16oz", gia:69000, cost:13653.98652, hao:15019.38517, gv:0.1978838626,
+ {ma:"HE26MC16SN", mon:"Shan nhài mãng cầu", size:"16oz", gia:69000, cost:13653.98652, hao:15019.38517, gv:0.1978838626,
   nvl:[["Mứt mãng cầu (60gr)",50,"ml",1000,132000,6600],["Cốt trà xanh nhài",110,"ml",700,27475,4317.5],
       ["Cốt quất",10,"ml",315,23760,754.2857143],["Siro đường",30,"ml",1100,28000,763.6363636],
       ["Thạch xanh nhài",40,"gr",720,16802,933.4444444],["Đá bi",220,"gr",5000,6480,285.12]]},
- {mon:"Xoài leo mãng cầu", size:"14oz", gia:69000, cost:14050.32945, hao:15455.3624, gv:0.2036279631,
+ {ma:"HE26MC14XL", mon:"Xoài leo mãng cầu", size:"14oz", gia:69000, cost:14050.32945, hao:15455.3624, gv:0.2036279631,
   nvl:[["Xoài",50,"gr",715,48600,3398.601399],["Chanh leo nguyên hạt",10,"ml",250,37800,1512],
       ["Mứt mãng cầu (40gr)",30,"ml",1000,132000,3960],["Siro đường",20,"ml",1100,28000,509.0909091],
       ["Cốt dừa",30,"ml",12000,864000,2160],["Thạch atiso",50,"gr",390,17763.38571,2277.357143],
       ["Đá bào",180,"gr",5000,6480,233.28]]}
 ];
 
+/* Cây sản phẩm 5 tầng: loại → nhóm → dòng → món → SKU.
+   Nhánh "Sản phẩm quà tặng" lấy đúng mã và tên trong bảng danh mục sản phẩm của CCP;
+   nhánh đồ uống pha chế là cấu trúc giả lập để chạy demo. */
 const MENU_DEMO = [
- {mon:"Cà phê đen",        nhom:"Cà phê truyền thống", gia:{"14oz":35000,"16oz":39000}, gm:0.83, pop:118, temp:["Đá","Nóng"]},
- {mon:"Cà phê nâu",        nhom:"Cà phê truyền thống", gia:{"14oz":39000,"16oz":45000}, gm:0.79, pop:132, temp:["Đá","Nóng"]},
- {mon:"Bạc xỉu",           nhom:"Cà phê truyền thống", gia:{"14oz":45000,"16oz":49000}, gm:0.74, pop:96,  temp:["Đá","Nóng"]},
- {mon:"Cà phê muối",       nhom:"Cà phê truyền thống", gia:{"14oz":45000,"16oz":49000}, gm:0.72, pop:88,  temp:["Đá","Nóng"]},
- {mon:"Cà phê cốt dừa",    nhom:"Cốt dừa",             gia:{"14oz":49000,"16oz":55000}, gm:0.70, pop:186, temp:["Đá"]},
- {mon:"Cacao cốt dừa",     nhom:"Cốt dừa",             gia:{"14oz":52000,"16oz":58000}, gm:0.66, pop:104, temp:["Đá"]},
- {mon:"Matcha cốt dừa",    nhom:"Cốt dừa",             gia:{"14oz":55000,"16oz":62000}, gm:0.63, pop:72,  temp:["Đá"]},
- {mon:"Đậu xanh cốt dừa",  nhom:"Cốt dừa",             gia:{"14oz":52000,"16oz":58000}, gm:0.67, pop:58,  temp:["Đá"]},
- {mon:"Sữa chua cốt dừa",  nhom:"Cốt dừa",             gia:{"14oz":55000,"16oz":62000}, gm:0.64, pop:47,  temp:["Đá"]},
- {mon:"Trà shan tuyết",    nhom:"Trà",                 gia:{"14oz":39000,"16oz":45000}, gm:0.80, pop:64,  temp:["Đá","Nóng"]},
- {mon:"Trà xanh nhài",     nhom:"Trà",                 gia:{"14oz":39000,"16oz":45000}, gm:0.81, pop:55,  temp:["Đá","Nóng"]},
- {mon:"Trà atiso đỏ",      nhom:"Trà",                 gia:{"14oz":42000,"16oz":48000}, gm:0.77, pop:33,  temp:["Đá","Nóng"]},
- {mon:"Trà quất mật ong",  nhom:"Trà",                 gia:{"14oz":42000,"16oz":48000}, gm:0.78, pop:41,  temp:["Đá","Nóng"]},
- {mon:"Trà đào cam sả",    nhom:"Trà",                 gia:{"14oz":49000,"16oz":55000}, gm:0.71, pop:79,  temp:["Đá"]},
- {mon:"Sữa chua đánh đá",  nhom:"Sữa chua & đá xay",   gia:{"14oz":45000,"16oz":52000}, gm:0.69, pop:62,  temp:["Đá"]},
- {mon:"Sữa chua việt quất",nhom:"Sữa chua & đá xay",   gia:{"14oz":52000,"16oz":59000}, gm:0.62, pop:38,  temp:["Đá"]},
- {mon:"Sữa chua nếp cẩm",  nhom:"Sữa chua & đá xay",   gia:{"14oz":52000,"16oz":59000}, gm:0.61, pop:29,  temp:["Đá"]},
- {mon:"Đá xay cacao",      nhom:"Sữa chua & đá xay",   gia:{"16oz":62000},              gm:0.58, pop:24,  temp:["Đá"]},
- {mon:"Bánh mì que",       nhom:"Đồ ăn kèm",           gia:{"1 phần":25000},            gm:0.55, pop:86,  temp:["—"]},
- {mon:"Bánh sữa chua",     nhom:"Đồ ăn kèm",           gia:{"1 phần":35000},            gm:0.52, pop:44,  temp:["—"]},
- {mon:"Hạt điều rang",     nhom:"Đồ ăn kèm",           gia:{"1 phần":39000},            gm:0.48, pop:21,  temp:["—"]},
- {mon:"Bánh flan cà phê",  nhom:"Đồ ăn kèm",           gia:{"1 phần":32000},            gm:0.50, pop:31,  temp:["—"]}
+ // ===== ĐỒ UỐNG PHA CHẾ =====
+ {loai:"Đồ uống pha chế",nhom:"Cà phê",dong:"Cà phê truyền thống",mon:"Cà phê đen",       gia:{"14oz":35000,"16oz":39000}, gm:0.83, pop:118, temp:["Đá","Nóng"]},
+ {loai:"Đồ uống pha chế",nhom:"Cà phê",dong:"Cà phê truyền thống",mon:"Cà phê nâu",       gia:{"14oz":39000,"16oz":45000}, gm:0.79, pop:132, temp:["Đá","Nóng"]},
+ {loai:"Đồ uống pha chế",nhom:"Cà phê",dong:"Cà phê truyền thống",mon:"Bạc xỉu",          gia:{"14oz":45000,"16oz":49000}, gm:0.74, pop:96,  temp:["Đá","Nóng"]},
+ {loai:"Đồ uống pha chế",nhom:"Cà phê",dong:"Cà phê truyền thống",mon:"Cà phê muối",      gia:{"14oz":45000,"16oz":49000}, gm:0.72, pop:88,  temp:["Đá","Nóng"]},
+ {loai:"Đồ uống pha chế",nhom:"Cà phê",dong:"Cốt dừa",            mon:"Cà phê cốt dừa",   gia:{"14oz":49000,"16oz":55000}, gm:0.70, pop:186, temp:["Đá"]},
+ {loai:"Đồ uống pha chế",nhom:"Cà phê",dong:"Cốt dừa",            mon:"Cacao cốt dừa",    gia:{"14oz":52000,"16oz":58000}, gm:0.66, pop:104, temp:["Đá"]},
+ {loai:"Đồ uống pha chế",nhom:"Cà phê",dong:"Cốt dừa",            mon:"Matcha cốt dừa",   gia:{"14oz":55000,"16oz":62000}, gm:0.63, pop:72,  temp:["Đá"]},
+ {loai:"Đồ uống pha chế",nhom:"Cà phê",dong:"Cốt dừa",            mon:"Đậu xanh cốt dừa", gia:{"14oz":52000,"16oz":58000}, gm:0.67, pop:58,  temp:["Đá"]},
+ {loai:"Đồ uống pha chế",nhom:"Cà phê",dong:"Cốt dừa",            mon:"Sữa chua cốt dừa", gia:{"14oz":55000,"16oz":62000}, gm:0.64, pop:47,  temp:["Đá"]},
+ {loai:"Đồ uống pha chế",nhom:"Trà",   dong:"Trà truyền thống",   mon:"Trà shan tuyết",   gia:{"14oz":39000,"16oz":45000}, gm:0.80, pop:64,  temp:["Đá","Nóng"]},
+ {loai:"Đồ uống pha chế",nhom:"Trà",   dong:"Trà truyền thống",   mon:"Trà xanh nhài",    gia:{"14oz":39000,"16oz":45000}, gm:0.81, pop:55,  temp:["Đá","Nóng"]},
+ {loai:"Đồ uống pha chế",nhom:"Trà",   dong:"Trà truyền thống",   mon:"Trà atiso đỏ",     gia:{"14oz":42000,"16oz":48000}, gm:0.77, pop:33,  temp:["Đá","Nóng"]},
+ {loai:"Đồ uống pha chế",nhom:"Trà",   dong:"Trà trái cây",       mon:"Trà quất mật ong", gia:{"14oz":42000,"16oz":48000}, gm:0.78, pop:41,  temp:["Đá","Nóng"]},
+ {loai:"Đồ uống pha chế",nhom:"Trà",   dong:"Trà trái cây",       mon:"Trà đào cam sả",   gia:{"14oz":49000,"16oz":55000}, gm:0.71, pop:79,  temp:["Đá"]},
+ {loai:"Đồ uống pha chế",nhom:"Sữa chua & đá xay",dong:"Sữa chua",mon:"Sữa chua đánh đá", gia:{"14oz":45000,"16oz":52000}, gm:0.69, pop:62,  temp:["Đá"]},
+ {loai:"Đồ uống pha chế",nhom:"Sữa chua & đá xay",dong:"Sữa chua",mon:"Sữa chua việt quất",gia:{"14oz":52000,"16oz":59000},gm:0.62, pop:38,  temp:["Đá"]},
+ {loai:"Đồ uống pha chế",nhom:"Sữa chua & đá xay",dong:"Sữa chua",mon:"Sữa chua nếp cẩm", gia:{"14oz":52000,"16oz":59000}, gm:0.61, pop:29,  temp:["Đá"]},
+ {loai:"Đồ uống pha chế",nhom:"Sữa chua & đá xay",dong:"Đá xay",  mon:"Đá xay cacao",     gia:{"16oz":62000},              gm:0.58, pop:24,  temp:["Đá"]},
+ // ===== ĐỒ ĂN KÈM =====
+ {loai:"Đồ ăn kèm",nhom:"Bánh",dong:"Bánh mặn", mon:"Bánh mì que",      gia:{"1 phần":25000}, gm:0.55, pop:86, temp:["—"]},
+ {loai:"Đồ ăn kèm",nhom:"Bánh",dong:"Bánh ngọt",mon:"Bánh sữa chua",    gia:{"1 phần":35000}, gm:0.52, pop:44, temp:["—"]},
+ {loai:"Đồ ăn kèm",nhom:"Bánh",dong:"Bánh ngọt",mon:"Bánh flan cà phê", gia:{"1 phần":32000}, gm:0.50, pop:31, temp:["—"]},
+ {loai:"Đồ ăn kèm",nhom:"Hạt & snack",dong:"Hạt rang",mon:"Hạt điều rang", gia:{"1 phần":39000}, gm:0.48, pop:21, temp:["—"]}
+];
+
+/* Nhánh quà tặng — mã, tên SKU và 5 tầng phân loại theo danh mục sản phẩm CCP.
+   Giá bán và biên lợi nhuận là số giả lập. */
+const MENU_QUA = [
+ ["16LNCPPTD454","Cà phê gói","Cà phê xã hội chủ nghĩa Việt Nam","Cà phê bột tự do","CÀ PHÊ TỰ DO - CPRo BOT O_CỘNG 454G TMGPH",225000,0.42,13],
+ ["16LNCPXH454","Cà phê gói","Cà phê xã hội chủ nghĩa Việt Nam","Cà phê bột xã hội","CÀ PHÊ XÃ HỘI - CPRo BOT O_CỘNG 454G TMGPH",225000,0.42,11],
+ ["16LNCPXH10","Cà phê gói","Cà phê xã hội chủ nghĩa Việt Nam","Cà phê bột xã hội","CÀ PHÊ XÃ HỘI - CPRo BOT O_CỘNG 1000G TMGPH",430000,0.45,5],
+ ["16LNCPPGCNM","Cà phê gói","Cà phê xã hội chủ nghĩa Việt Nam","Cà phê chủ nghĩa","CÀ PHÊ CHỦ NGHĨA PHIN GIẤY 8GRx12 PHIN",145000,0.38,18],
+ ["16LNCPPGDLM","Cà phê gói","Cà phê xã hội chủ nghĩa Việt Nam","Cà phê độc lập","CÀ PHÊ ĐỘC LẬP PHIN GIẤY 8GRx12 PHIN",145000,0.38,16],
+ ["16LNCPPGQHPM","Cà phê gói","Cà phê xã hội chủ nghĩa Việt Nam","Cà phê Quế hạnh phúc","CÀ PHÊ QUẾ HẠNH PHÚC PHIN GIẤY 10GRx10",155000,0.36,9],
+ ["16LNCPPGTDM","Cà phê gói","Cà phê xã hội chủ nghĩa Việt Nam","Cà phê tự do","CÀ PHÊ TỰ DO PHIN GIẤY 10GRx10",155000,0.36,12],
+ ["16LNCPPGXHM","Cà phê gói","Cà phê xã hội chủ nghĩa Việt Nam","Cà phê xã hội","CÀ PHÊ XÃ HỘI PHIN GIẤY 8GRx12 TÚI",139000,0.37,14],
+ ["16LNCPPPG","Cà phê gói","Cà phê xã hội chủ nghĩa Việt Nam","Cà phê phở Việt Nam","CÀ PHÊ PHỞ VIỆT NAM HỘP 8GRx10 PHIN GIẤY CỘNG",149000,0.39,10],
+ ["16LNCPPB","Cà phê gói","Cà phê xã hội chủ nghĩa Việt Nam","Cà phê phở Việt Nam","CÀ PHÊ PHỞ VIỆT NAM HỘP 160GR BỘT CỘNG",129000,0.40,8],
+ ["16LNTSNHT10","Trà gói","Trà hòa tan","Trà nhài","NHÀI ƠI, HỘP 17Gx10 CỘNG - Instant Jasmine Milk Tea 17grx10",99000,0.35,15],
+ ["16LNTSNHT6","Trà gói","Trà hòa tan","Trà nhài","NHÀI ƠI, HỘP 17Gx6 CỘNG - Instant Jasmine Milk Tea 17grx6",65000,0.34,9],
+ ["16LNBGNXQT","Hàng tiêu dùng","Cốc, chén","Bình giữ nhiệt","BÌNH GIỮ NHIỆT XANH - QUYẾT CHÍ ẮT LÀM NÊN",349000,0.30,6],
+ ["16LNCMDQT","Hàng tiêu dùng","Cốc, chén","Camen","CA MEN ĐỎ - QUYẾT CHÍ ẮT LÀM NÊN",159000,0.33,11],
+ ["19TLCVNSK1","Hàng tiêu dùng","Phụ kiện","Cờ, sticker","1 CỜ VIỆT NAM SIZE NHỎ + 2 STICKER",35000,0.46,22],
+ ["15CBBDDP","Hộp quà tặng","Hộp quà tết","Set quà","BỘ ĐỔI ĐỊA PHƯƠNG",459000,0.28,4],
+ ["15CBHQ630","Hộp quà tặng","Hộp quà tết","Set quà","COMBO HỘP QUÀ 630K",630000,0.26,3]
 ];
 
 const STORES = [
@@ -419,26 +448,35 @@ const KHACH = [
  {ten:"Khách đoàn / doanh nghiệp", w:0.12, disc:0.115}
 ];
 const VAT = 0.08;
+const LEVELS=[["loai","Loại"],["nhom","Nhóm"],["dong","Dòng"],["mon","Món"],["sku","SKU"]];
 
 /* ---- PRNG seed cố định để số liệu demo không đổi giữa các lần mở ---- */
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
   t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const rnd = mulberry32(20260225);
 
-/* ---- Dựng danh mục SKU ---- */
+/* ---- Dựng danh mục SKU theo 5 tầng ---- */
 const SKUS=[];
+const skuName=(mon,size,temp)=>mon+(size?" · "+size:"")+(temp&&temp!=="—"?" · "+temp:"");
 MENU_DEMO.forEach(it=>{
   Object.keys(it.gia).forEach(sz=>{
     it.temp.forEach(tp=>{
       const gia=it.gia[sz];
       const gmv=Math.min(0.9,Math.max(0.35,it.gm+(sz==="16oz"?0.012:0)+(rnd()-0.5)*0.03));
-      SKUS.push({mon:it.mon,nhom:it.nhom,size:sz,temp:tp,gia:gia,cogs:gia*(1-gmv),pop:it.pop*(sz==="16oz"?0.62:1)*(tp==="Nóng"?0.34:1),real:false});
+      SKUS.push({loai:it.loai,nhom:it.nhom,dong:it.dong,mon:it.mon,sku:skuName(it.mon,sz,tp),
+        size:sz,temp:tp,gia,cogs:gia*(1-gmv),pop:it.pop*(sz==="16oz"?0.62:1)*(tp==="Nóng"?0.34:1),real:false});
     });
   });
 });
-REAL.forEach(r=>{
-  SKUS.push({mon:r.mon,nhom:"Đồ uống mới hè 2026",size:r.size,temp:"Đá",gia:r.gia,cogs:r.hao,
-    pop:[46,38,31,27][REAL.indexOf(r)],real:true,bom:r.nvl});
+MENU_QUA.forEach(r=>{
+  const [ma,nhom,dong,mon,sku,gia,gm,pop]=r;
+  SKUS.push({ma,loai:"Sản phẩm quà tặng",nhom,dong,mon,sku,size:"1 sản phẩm",temp:"—",
+    gia,cogs:gia*(1-gm),pop,real:false,qua:true});
+});
+REAL.forEach((r,ri)=>{
+  SKUS.push({ma:r.ma,loai:"Đồ uống pha chế",nhom:"Đồ uống mới hè 2026",dong:"Mãng cầu hè 2026",
+    mon:r.mon,sku:skuName(r.mon,r.size,"Đá"),size:r.size,temp:"Đá",
+    gia:r.gia,cogs:r.hao,pop:[46,38,31,27][ri],real:true,bom:r.nvl});
 });
 
 /* ---- Sinh bảng fact: SKU × nhóm cửa hàng × nhóm khách ---- */
@@ -447,13 +485,18 @@ SKUS.forEach((s,si)=>{
   STORES.forEach((st,ti)=>{
     KHACH.forEach((kh,ki)=>{
       let bias=1;
-      if(st.mien==="Miền Nam"&&s.nhom==="Cà phê truyền thống")bias*=0.86;
+      if(st.mien==="Miền Nam"&&s.dong==="Cà phê truyền thống")bias*=0.86;
       if(st.mien==="Miền Bắc"&&s.temp==="Nóng")bias*=1.45;
       if(st.mien!=="Miền Bắc"&&s.temp==="Nóng")bias*=0.55;
-      if(st.cdt==="Nhượng quyền quốc tế"&&s.nhom==="Cốt dừa")bias*=1.5;
-      if(st.cdt==="Nhượng quyền quốc tế"&&s.nhom==="Đồ ăn kèm")bias*=0.45;
-      if(kh.ten==="Giao hàng qua app"&&s.nhom==="Đồ ăn kèm")bias*=1.6;
+      if(st.cdt==="Nhượng quyền quốc tế"&&s.dong==="Cốt dừa")bias*=1.5;
+      if(st.cdt==="Nhượng quyền quốc tế"&&s.loai==="Đồ ăn kèm")bias*=0.45;
+      if(kh.ten==="Giao hàng qua app"&&s.loai==="Đồ ăn kèm")bias*=1.6;
       if(s.nhom==="Đồ uống mới hè 2026")bias*=(st.cdt==="Tự vận hành"?1.35:0.8);
+      if(s.loai==="Sản phẩm quà tặng"){
+        bias*=(st.cdt==="Tự vận hành"?1.3:0.75);
+        if(kh.ten==="Khách đoàn / doanh nghiệp")bias*=4.2;
+        if(kh.ten==="Giao hàng qua app")bias*=0.35;
+      }
       const qty=Math.round(s.pop*st.w*kh.w*bias*(0.72+rnd()*0.58)*3.4);
       if(qty<=0)return;
       const disc=Math.max(0,kh.disc+(rnd()-0.5)*0.02);
@@ -488,21 +531,35 @@ const QUAD={star:{k:"Ngôi sao",c:"var(--star)",cls:"p-star",hex:"#C08A2E"},
 /* =========================================================
    3. BỘ LỌC
    ========================================================= */
-const F={mien:"",kv:"",cdt:"",nhom:"",kh:""};
-function fillSelect(el,opts,label){
+const F={mien:"",kv:"",cdt:"",kh:"",loai:"",nhom:"",dong:""};
+function fillSelect(el,opts,label,keep){
+  const cur=el.value;
   el.innerHTML=`<option value="">${label}</option>`+opts.map(o=>`<option value="${o}">${o}</option>`).join('');
+  if(keep&&opts.includes(cur))el.value=cur;
 }
 const uniq=a=>[...new Set(a)];
+function cascade(){
+  const byLoai=SKUS.filter(s=>!F.loai||s.loai===F.loai);
+  fillSelect(fNhom,uniq(byLoai.map(s=>s.nhom)),"Tất cả nhóm",true);
+  if(F.nhom&&!uniq(byLoai.map(s=>s.nhom)).includes(F.nhom)){F.nhom="";fNhom.value=""}
+  const byNhom=byLoai.filter(s=>!F.nhom||s.nhom===F.nhom);
+  fillSelect(fDong,uniq(byNhom.map(s=>s.dong)),"Tất cả dòng",true);
+  if(F.dong&&!uniq(byNhom.map(s=>s.dong)).includes(F.dong)){F.dong="";fDong.value=""}
+}
 fillSelect(fMien,uniq(STORES.map(s=>s.mien)),"Tất cả miền");
 fillSelect(fKV,uniq(STORES.map(s=>s.kv)),"Tất cả khu vực");
 fillSelect(fCDT,uniq(STORES.map(s=>s.cdt)),"Tất cả chủ đầu tư");
-fillSelect(fNhom,uniq(SKUS.map(s=>s.nhom)),"Tất cả nhóm sản phẩm");
+fillSelect(fLoai,uniq(SKUS.map(s=>s.loai)),"Tất cả loại");
 fillSelect(fKH,KHACH.map(k=>k.ten),"Tất cả nhóm khách");
-[["fMien","mien"],["fKV","kv"],["fCDT","cdt"],["fNhom","nhom"],["fKH","kh"]].forEach(([id,k])=>{
-  document.getElementById(id).addEventListener('change',e=>{F[k]=e.target.value;renderAll()});
+cascade();
+[["fMien","mien"],["fKV","kv"],["fCDT","cdt"],["fKH","kh"],
+ ["fLoai","loai"],["fNhom","nhom"],["fDong","dong"]].forEach(([id,k])=>{
+  document.getElementById(id).addEventListener('change',e=>{F[k]=e.target.value;
+    if(k==="loai"||k==="nhom")cascade();renderAll()});
 });
 fReset.addEventListener('click',()=>{Object.keys(F).forEach(k=>F[k]="");
-  ["fMien","fKV","fCDT","fNhom","fKH"].forEach(id=>document.getElementById(id).value="");renderAll()});
+  ["fMien","fKV","fCDT","fKH","fLoai","fNhom","fDong"].forEach(id=>document.getElementById(id).value="");
+  cascade();renderAll()});
 
 function rows(){
   return FACT.filter(r=>{
@@ -510,8 +567,10 @@ function rows(){
     if(F.mien&&st.mien!==F.mien)return false;
     if(F.kv&&st.kv!==F.kv)return false;
     if(F.cdt&&st.cdt!==F.cdt)return false;
-    if(F.nhom&&s.nhom!==F.nhom)return false;
     if(F.kh&&kh.ten!==F.kh)return false;
+    if(F.loai&&s.loai!==F.loai)return false;
+    if(F.nhom&&s.nhom!==F.nhom)return false;
+    if(F.dong&&s.dong!==F.dong)return false;
     return true;
   });
 }
@@ -543,11 +602,12 @@ const BASEOPT={textStyle:{fontFamily:"'Be Vietnam Pro',sans-serif"},
 /* ---------- items theo chế độ xem ---------- */
 let viewMode="mon";
 function items(rs,mode){
-  const m=group(rs,(r,s)=>mode==="mon"?s.mon:`${s.mon} · ${s.size}${s.temp!=="—"?" · "+s.temp:""}`);
+  const m=group(rs,(r,s)=>s[mode]||"(chưa phân loại)");
   const out=[];
   m.forEach((list,k)=>{
     const a=agg(list),s=SKUS[list[0].si];
-    out.push({ten:k,mon:s.mon,nhom:s.nhom,real:list.every(x=>SKUS[x.si].real)&&SKUS[list[0].si].real,
+    out.push({ten:k,mon:s.mon,loai:s.loai,nhom:s.nhom,dong:s.dong,
+      real:SKUS[list[0].si].real&&list.every(x=>SKUS[x.si].real),
       q:a.q,dt:a.dt,ds:a.ds,cg:a.cg,gm:a.gm,aspg:a.q?a.ds/a.q:0});
   });
   return out;
@@ -564,7 +624,7 @@ function quadrantize(list){
 function renderKpis(){
   const a=agg(rows());
   kpis.innerHTML=[
-    ["Tổng số bán",num(a.q),"ly / phần — theo bộ lọc hiện tại",""],
+    ["Tổng số bán",num(a.q),"sản phẩm bán ra — theo bộ lọc hiện tại",""],
     ["Doanh số",shortVnd(a.ds),"Số bán × giá niêm yết",""],
     ["Doanh thu sau giảm giá",shortVnd(a.dt),"Chi phí giảm giá "+shortVnd(a.gg),""],
     ["DT sau giảm giá / sản phẩm",vnd(a.dtsp)+" đ","",""],
@@ -618,7 +678,7 @@ function renderP2(){
     legend:{show:false},
     tooltip:{...BASEOPT.tooltip,formatter:p=>{const d=p.data;
       return `<b>${d[3]}</b>${d[6]?' · costing thật':''}<br>${d[4]}<br>Số bán: ${num(d[0])}<br>GM: ${pct(d[1])}<br>DT sau giảm giá: ${shortVnd(d[2])}<br>Giá niêm yết bq: ${vnd(d[5])} đ`}},
-    xAxis:{type:"value",name:"Tổng số bán (ly / phần)",nameLocation:"middle",nameGap:30,...AXIS,
+    xAxis:{type:"value",name:"Tổng số bán (sản phẩm)",nameLocation:"middle",nameGap:30,...AXIS,
       axisLabel:{...AXIS.axisLabel,formatter:v=>num(v)}},
     yAxis:{type:"value",name:"Biên lợi nhuận gộp",nameLocation:"middle",nameGap:44,min:y0,max:y1,...AXIS,
       axisLabel:{...AXIS.axisLabel,formatter:v=>(v*100).toFixed(0)+"%"}},
@@ -632,9 +692,11 @@ function renderP2(){
     .map(([k,t])=>`<span>${svgIcon(k,QUAD[k].hex)}${QUAD[k].k} — ${t}</span>`).join('');
   const order={star:0,puzzle:1,plow:2,dog:3};
   list.sort((a,b)=>order[a.quad]-order[b.quad]||b.dt-a.dt);
-  t_matrix.innerHTML=`<thead><tr><th>Nhóm</th><th>Món / SKU</th><th>Phân nhóm</th><th>Số bán</th><th>GM</th><th>DT sau GG</th></tr></thead><tbody>`+
+  const lvName=viewMode==="sku"?"SKU":"Món";
+  t_matrix.innerHTML=`<thead><tr><th>Góc</th><th>${lvName}</th><th>Thuộc nhóm</th><th>Số bán</th><th>GM</th><th>DT sau GG</th></tr></thead><tbody>`+
     list.map(d=>`<tr><td>${pill(d.quad)}</td>
-      <td>${d.ten}${d.real?' <span class="badge real">thật</span>':''}</td><td>${d.nhom}</td>
+      <td>${d.ten}${d.real?' <span class="badge real">thật</span>':''}</td>
+      <td>${viewMode==="loai"?"—":viewMode==="nhom"?d.loai:d.nhom}</td>
       <td class="mono">${num(d.q)}</td><td class="mono">${pct(d.gm)}</td><td class="mono">${shortVnd(d.dt)}</td></tr>`).join('')+`</tbody>`;
 }
 
@@ -656,19 +718,18 @@ function renderP3(){
       data:Object.keys(QUAD).map(k=>({name:QUAD[k].k,icon:"path://"+ICON[k]}))}},true);
   pie("c_pieR",k=>sum[k].dt,'r');
 
-  t_perf.innerHTML=`<thead><tr><th>Nhóm</th><th>Số món</th><th>Tỉ trọng bán</th><th>Tỉ trọng doanh thu</th><th>GM nhóm</th><th>Chênh lệch tỉ trọng</th></tr></thead><tbody>`+
-    Object.keys(QUAD).map(k=>{const s=sum[k],pq=s.q/tq,pr=s.dt/tr,diff=pr-pq;
-      return `<tr><td>${pill(k)}</td><td class="mono">${s.n}</td>
-      <td class="mono">${pct(pq)}</td><td class="mono">${pct(pr)}</td>
-      <td class="mono">${s.dt?pct((s.dt-s.cg)/s.dt):"—"}</td>
-      <td class="mono" style="color:${diff>=0?'var(--olive2)':'var(--red)'}">${diff>=0?'+':''}${pct(diff)}</td></tr>`}).join('')+`</tbody>`;
+  t_perf.innerHTML=`<thead><tr><th>Nhóm</th><th>Số món</th><th>Tỉ trọng bán</th><th>Tỉ trọng doanh thu</th><th>GM nhóm</th></tr></thead><tbody>`+
+    Object.keys(QUAD).map(k=>{const sm=sum[k];
+      return `<tr><td>${pill(k)}</td><td class="mono">${sm.n}</td>
+      <td class="mono">${pct(sm.q/tq)}</td><td class="mono">${pct(sm.dt/tr)}</td>
+      <td class="mono">${sm.dt?pct((sm.dt-sm.cg)/sm.dt):"—"}</td></tr>`}).join('')+`</tbody>`;
 
   const byStore=group(rows(),(r,s,st)=>`${st.kv} · ${st.cdt}`);
   const cats=[],ser={};Object.keys(QUAD).forEach(k=>ser[k]=[]);
   const monQuad={};list.forEach(d=>monQuad[d.ten]=d.quad);
   byStore.forEach((l,k)=>{
     cats.push(k);const acc={star:0,plow:0,puzzle:0,dog:0};let tot=0;
-    l.forEach(r=>{const s=SKUS[r.si];const key=viewMode==="mon"?s.mon:`${s.mon} · ${s.size}${s.temp!=="—"?" · "+s.temp:""}`;
+    l.forEach(r=>{const s=SKUS[r.si];const key=s[viewMode]||"(chưa phân loại)";
       const q=monQuad[key];if(q){acc[q]+=r.qty;tot+=r.qty}});
     Object.keys(acc).forEach(q=>ser[q].push(tot?+(acc[q]/tot*100).toFixed(1):0));
   });
@@ -750,7 +811,7 @@ function renderP5(){
   const base=items(rs,viewMode).filter(d=>d.q>0);
   quadrantize(base);
   const simRs=rs.map(simRow);
-  const m=group(simRs,(r,s)=>viewMode==="mon"?s.mon:`${s.mon} · ${s.size}${s.temp!=="—"?" · "+s.temp:""}`);
+  const m=group(simRs,(r,s)=>s[viewMode]||"(chưa phân loại)");
   const sim=[];m.forEach((l,k)=>{const a=agg(l);sim.push({ten:k,q:a.q,gm:a.gm,dt:a.dt,cg:a.cg})});
   const b=agg(rs),a2=agg(simRs);
   kpisSim.innerHTML=[
@@ -767,7 +828,7 @@ function renderP5(){
   ch("c_sim").setOption({...BASEOPT,
     grid:{left:8,right:22,top:16,bottom:26,containLabel:true},
     tooltip:{...BASEOPT.tooltip,formatter:p=>{const d=p.data;return `<b>${d[3]}</b><br>Số bán ${num(d[0])}<br>GM ${pct(d[1])}`}},
-    xAxis:{type:"value",name:"Tổng số bán (ly / phần)",nameLocation:"middle",nameGap:30,...AXIS,axisLabel:{...AXIS.axisLabel,formatter:v=>num(v)}},
+    xAxis:{type:"value",name:"Tổng số bán (sản phẩm)",nameLocation:"middle",nameGap:30,...AXIS,axisLabel:{...AXIS.axisLabel,formatter:v=>num(v)}},
     yAxis:{type:"value",name:"Biên lợi nhuận gộp",nameLocation:"middle",nameGap:44,min:sy0,max:sy1,...AXIS,axisLabel:{...AXIS.axisLabel,formatter:v=>(v*100).toFixed(0)+"%"}},
     series:[
       {name:"Hiện trạng",type:"scatter",symbolSize:11,itemStyle:{color:"#B9B09A",opacity:.55},
@@ -781,7 +842,7 @@ function renderP5(){
     ]},true);
 
   const diff=sim.filter(d=>bmap[d.ten]).map(d=>({ten:d.ten,g0:bmap[d.ten].gm,g1:d.gm,dq:d.q,
-    real:SKUS.find(s=>s.mon===d.ten.split(" · ")[0])?.real}))
+    real:SKUS.some(s=>s[viewMode]===d.ten&&s.real)}))
     .sort((x,y)=>Math.abs(y.g1-y.g0)-Math.abs(x.g1-x.g0)).slice(0,18);
   t_sim.innerHTML=`<thead><tr><th>Món</th><th>GM hiện tại</th><th>GM sau kịch bản</th><th>Thay đổi</th></tr></thead><tbody>`+
     diff.map(d=>`<tr><td>${d.ten}${d.real?' <span class="badge real">thật</span>':''}</td>
@@ -818,7 +879,7 @@ function renderP6(){
       data:["Số bán thực tế","Dự báo"]},
     tooltip:{...BASEOPT.tooltip,trigger:"axis",valueFormatter:v=>num(v)},
     xAxis:{type:"category",data:FC_MONTHS,boundaryGap:false,...AXIS},
-    yAxis:{type:"value",name:"ly/phần",...AXIS,axisLabel:{...AXIS.axisLabel,formatter:v=>shortVnd(v).replace(' tr','tr')}},
+    yAxis:{type:"value",name:"sản phẩm",...AXIS,axisLabel:{...AXIS.axisLabel,formatter:v=>shortVnd(v).replace(' tr','tr')}},
     series:[
       {name:"Khoảng tin cậy",type:"line",stack:"ci",data:[...Array(13).fill('-'),...lo],
        lineStyle:{opacity:0},symbol:"none",areaStyle:{color:"transparent"}},
@@ -839,7 +900,7 @@ function renderP6(){
     return {ten:d.ten,real:d.real,q,ds:q*giaBq,dt:q*dtBq,cg:q*cgBq}}).sort((x,y)=>y.q-x.q);
   const sDs=fcMon.reduce((s,d)=>s+d.ds,0),sDt=fcMon.reduce((s,d)=>s+d.dt,0),sCg=fcMon.reduce((s,d)=>s+d.cg,0);
   kpisFc.innerHTML=[
-    ["Số bán dự kiến tháng tới",num(nextQ)+" ly/phần","T10/2026"],
+    ["Số bán dự kiến tháng tới",num(nextQ),"sản phẩm — T10/2026"],
     ["Doanh số dự kiến",shortVnd(sDs),"Theo giá niêm yết hiện hành"],
     ["Doanh thu dự kiến sau giảm giá",shortVnd(sDt),""],
     ["Biên lợi nhuận gộp dự kiến",pct(sDt?(sDt-sCg)/sDt:0),"Giữ nguyên giá vốn hiện tại"]
