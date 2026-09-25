@@ -275,7 +275,7 @@ input[type=range]{width:100%;accent-color:var(--olive2)}
       <!-- ====== TRANG 3 — KỊCH BẢN & DỰ BÁO ====== -->
       <section class="page" id="p3">
         <div class="sechead"><div><h2>Kịch bản giả lập ma trận menu</h2>
-        <p>Biên lợi nhuận gộp của toàn menu và từng món thay đổi ra sao khi giá nguyên vật liệu và giá bán thay đổi. Thanh trượt nguyên vật liệu cụ thể áp dụng cho 4 SKU hè 2026 đang có định mức thật.</p></div></div>
+        <p>Biên lợi nhuận gộp của toàn menu và từng món thay đổi ra sao khi giá nguyên vật liệu và giá bán thay đổi. Bảng nguyên vật liệu bên dưới cho chỉnh từng thứ một mức riêng, áp dụng cho 4 SKU hè 2026 đang có định mức thật.</p></div></div>
         <div class="card">
           <div class="sliders">
             <div class="sl">
@@ -290,15 +290,14 @@ input[type=range]{width:100%;accent-color:var(--olive2)}
               <label for="sScope">Phạm vi áp dụng giá bán</label>
               <select id="sScope"></select>
             </div>
-            <div class="f" style="min-width:200px">
-              <label for="sNVLItem">Giá một nguyên vật liệu cụ thể</label>
-              <select id="sNVLItem"></select>
-            </div>
-            <div class="sl">
-              <label for="sNVLOne">Mức thay đổi của NVL đã chọn <b id="vNVLOne">0%</b></label>
-              <input type="range" id="sNVLOne" min="-30" max="80" value="0" step="1">
-            </div>
           </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <h3>Điều chỉnh giá từng nguyên vật liệu <span class="badge real">định mức thật</span>
+            <button class="btn ghost" id="nvlReset" style="padding:4px 10px;font-size:12px">Đặt lại</button></h3>
+          <div class="hint">Mỗi nguyên vật liệu chỉnh một mức riêng, cộng dồn với mức chung ở trên. Chi phí/ly là bình quân trên các SKU có dùng nguyên vật liệu đó.</div>
+          <div class="tbl-wrap" style="max-height:340px"><table id="t_nvladj"></table></div>
         </div>
 
         <div class="kpis" id="kpisSim" style="margin-top:14px"></div>
@@ -315,11 +314,6 @@ input[type=range]{width:100%;accent-color:var(--olive2)}
           </div>
         </div>
 
-        <div class="card" style="margin-top:14px">
-          <h3>Cấu trúc giá vốn 4 SKU hè 2026 theo nguyên vật liệu <span class="badge real">số thật</span></h3>
-          <div class="hint">Định mức và đơn giá lấy nguyên từ file costing, đã cộng 10% tiêu hao theo công thức gốc.</div>
-          <div id="c_bom" class="chart"></div>
-        </div>
 
       </section>
 
@@ -786,21 +780,41 @@ function renderP4(){
 }
 
 /* ---------- kịch bản giả lập ---------- */
-const NVL_NAMES=uniq(REAL.flatMap(r=>r.nvl.map(n=>n[0])));
-fillSelect(sNVLItem,NVL_NAMES,"— Không chọn —");
+const NVLMAP=new Map();
+REAL.forEach(r=>r.nvl.forEach(n=>{
+  const e=NVLMAP.get(n[0])||{ten:n[0],dvt:n[2],tt:0,n:0};e.tt+=n[5];e.n++;NVLMAP.set(n[0],e)}));
+const NVLROWS=[...NVLMAP.values()].sort((a,b)=>b.tt/b.n-a.tt/a.n);
+const NVLADJ={};NVLROWS.forEach(r=>NVLADJ[r.ten]=0);
+
 fillSelect(sScope,["Toàn menu",...uniq(SKUS.map(s=>s.nhom)).map(n=>"Nhóm: "+n),...uniq(SKUS.map(s=>s.mon)).map(m=>"Món: "+m)],"Toàn menu");
-[sNVL,sGia,sNVLOne].forEach(el=>el.addEventListener('input',()=>{
+[sNVL,sGia].forEach(el=>el.addEventListener('input',()=>{
   vNVL.textContent=(sNVL.value>0?"+":"")+sNVL.value+"%";
   vGia.textContent=(sGia.value>0?"+":"")+sGia.value+"%";
-  vNVLOne.textContent=(sNVLOne.value>0?"+":"")+sNVLOne.value+"%";renderP5()}));
-[sScope,sNVLItem].forEach(el=>el.addEventListener('change',renderP5));
+  drawNvlTable();renderP5()}));
+sScope.addEventListener('change',renderP5);
+
+function drawNvlTable(){
+  const g=(+sNVL.value)/100;
+  t_nvladj.innerHTML=`<thead><tr><th>Nguyên vật liệu</th><th>Số SKU dùng</th><th>Chi phí/ly hiện tại</th>
+    <th style="text-align:center;min-width:170px">% điều chỉnh</th><th>Chi phí/ly sau</th></tr></thead><tbody>`+
+    NVLROWS.map((r,i)=>{const base=r.tt/r.n,a=NVLADJ[r.ten]/100,sau=base*(1+g)*(1+a);
+      return `<tr><td>${r.ten}</td><td class="mono">${r.n}</td><td class="mono">${vnd(base)} đ</td>
+      <td style="text-align:center;white-space:nowrap">
+        <input type="range" class="nvladj" data-i="${i}" min="-30" max="80" step="1" value="${NVLADJ[r.ten]}" style="width:112px;vertical-align:middle">
+        <b class="mono" style="display:inline-block;width:42px;text-align:right;color:${NVLADJ[r.ten]?'var(--red)':'var(--ink3)'}">${NVLADJ[r.ten]>0?'+':''}${NVLADJ[r.ten]}%</b></td>
+      <td class="mono" style="color:${sau>base?'var(--red)':sau<base?'var(--olive2)':'inherit'}">${vnd(sau)} đ</td></tr>`}).join('')+`</tbody>`;
+  t_nvladj.querySelectorAll('.nvladj').forEach(el=>el.addEventListener('input',e=>{
+    NVLADJ[NVLROWS[+e.target.dataset.i].ten]=+e.target.value;drawNvlTable();renderP5()}));
+}
+nvlReset.addEventListener('click',()=>{NVLROWS.forEach(r=>NVLADJ[r.ten]=0);drawNvlTable();renderP5()});
 
 function simRow(r){
   const s=SKUS[r.si];
-  let cogs=r.cogs*(1+ (+sNVL.value)/100);
-  if(s.real&&sNVLItem.value&&+sNVLOne.value!==0){
-    const bom=s.bom||[];const hit=bom.find(n=>n[0]===sNVLItem.value);
-    if(hit){const delta=hit[5]*( (+sNVLOne.value)/100 )*1.1*(1+(+sNVL.value)/100);cogs+=delta}
+  const g=(+sNVL.value)/100;
+  let cogs=r.cogs*(1+g);
+  if(s.real&&s.bom){
+    s.bom.forEach(n=>{const a=(NVLADJ[n[0]]||0)/100;
+      if(a)cogs+=n[5]*a*1.1*(1+g)});
   }
   let gia=r.gia;
   const sc=sScope.value;
@@ -851,18 +865,6 @@ function renderP5(){
       <td class="mono">${pct(d.g0)}</td><td class="mono">${pct(d.g1)}</td>
       <td class="mono" style="color:${d.g1>=d.g0?'var(--olive2)':'var(--red)'}">${d.g1>=d.g0?'+':''}${pct(d.g1-d.g0)}</td></tr>`).join('')+`</tbody>`;
 
-  const nvlAll=uniq(REAL.flatMap(r=>r.nvl.map(n=>n[0])));
-  ch("c_bom").setOption({...BASEOPT,
-    grid:{left:8,right:12,top:64,bottom:8,containLabel:true},
-    legend:{top:0,type:"scroll",width:"92%",textStyle:{color:"#5C5A4E",fontSize:11},itemHeight:9,itemGap:14},
-    tooltip:{...BASEOPT.tooltip,trigger:"axis",axisPointer:{type:"shadow"},
-      valueFormatter:v=>vnd(v)+" đ"},
-    xAxis:{type:"category",data:REAL.map(r=>r.mon+" ("+r.size+")"),...AXIS,
-      axisLabel:{...AXIS.axisLabel,interval:0,width:120,overflow:"break"}},
-    yAxis:{type:"value",name:"đồng / ly",...AXIS,axisLabel:{...AXIS.axisLabel,formatter:v=>num(v)}},
-    series:nvlAll.map((n,i)=>({name:n,type:"bar",stack:"c",barMaxWidth:66,
-      itemStyle:{color:["#3F4A35","#5C6B47","#8A9670","#C08A2E","#A3352B","#41607C","#7E6A4E","#B0A88E","#6E8C7A","#9C7B52","#4E5D6C","#C2A46B","#87715C"][i%13]},
-      data:REAL.map(r=>{const h=r.nvl.find(x=>x[0]===n);return h?+(h[5]||0).toFixed(0):0})}))},true);
 }
 
 /* ---------- dự báo (giả lập) ---------- */
@@ -942,7 +944,7 @@ document.querySelectorAll('#viewToggle button').forEach(b=>b.addEventListener('c
   b.classList.add('on');viewMode=b.dataset.v;renderAll();
 }));
 
-function renderAll(){renderKpis();renderP1();renderP2();renderP3();renderP4();renderP5();renderP6();
+function renderAll(){drawNvlTable();renderKpis();renderP1();renderP2();renderP3();renderP4();renderP5();renderP6();
   setTimeout(()=>Object.values(charts).forEach(c=>c.resize()),20)}
 renderAll();
 </script>
